@@ -1,0 +1,132 @@
+{% extends 'base.html'%}
+
+
+{% block 'titulo'%}
+Aula
+
+{% endblock%}
+
+{% block 'body' %}
+
+
+
+
+<div class="container">
+  <br>
+  {% if not avaliacao_usuario %}
+
+    <div class="alert alert-primary" role="alert">
+      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+        CLIQUE AQUI!
+      </button> &nbsp para avaliar essa aula
+    </div>
+  {% else %}
+
+  {% endif %}
+
+  <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Avalie</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+  
+          <form action="{% url 'processa_avaliacao' %}" method="POST">
+            {% csrf_token %}
+  
+            <input type="hidden" value="{{aula.id}}" name="aula_id">
+  
+            <select name="avaliacao" class="form-control">
+              <option value="p">Péssimo</option>
+              <option value="r">Ruim</option>
+              <option value="re" selected>Regular</option>
+              <option value="b">Bom</option>
+              <option value="o">Ótimo</option>
+  
+  
+            </select>
+  
+            <br>
+            
+            <input type="submit" class="btn btn-success" value="Avaliar">
+  
+  
+          </form>
+        </div>
+      
+      </div>
+    </div>
+  </div>
+
+
+
+  <br>
+  <h1>{{aula.nome}}</h1>
+  <hr>
+  <video  width="70%" controls>
+      <source src="{{aula.aula.url}}" type="video/mp4">
+    </video>
+  <hr>
+
+  <h1>Faça seu comentário: </h1>
+  <input id="comentario" type="text" placeholder="Comentário..." class="form-control">
+  <br>
+  <input onclick="envia_comentario()" type="button" value="Enviar" class="btn btn-success btn-lg">
+  <hr>
+  <div id="comentarios">
+    {% for i in comentarios%}
+      <div style="background-color: red; width: 10px; height: 10px; border-radius: 15px; display: inline-block;"></div>
+      <h5 style="display: inline;">{{i.usuario}}</h5>
+      <p style="margin-left: 50px;">{{i.comentario}}</p>
+      <hr>
+    {% endfor %}
+  </div>
+</div>
+ </div>
+
+
+<script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+<script>
+
+function envia_comentario(){
+   comentario = document.getElementById('comentario').value
+   document.getElementById('comentario').value = ""
+   $.ajax({
+            url: "{% url 'comentarios'%}",
+            method: 'post',
+            data: {
+                'csrfmiddlewaretoken': '{{ csrf_token }}',
+                'aula_id': "{{aula.id}}",
+                'id_usuario': "{{id_usuario}}",
+                'comentario': comentario
+            },
+            success: function(response){
+              response = JSON.parse(response )
+
+              if(response['status'] == "1"){
+                div_comentario = document.getElementById('comentarios')
+                div_comentario.innerHTML = ""
+             
+                for(i=0; i < response['comentarios'].length; i++){
+                  
+        
+                  div_comentario.innerHTML +=' '+ ' <div style="background-color: red; width: 10px; height: 10px; border-radius: 15px; display: inline-block;"></div>'
+                  div_comentario.innerHTML += ' '+ '<h5 style="display: inline;">'+ response['comentarios'][i][0] +'</h5>'
+                  div_comentario.innerHTML += '<p style="margin-left: 50px;">' + response['comentarios'][i][1] + '</p>'
+                  div_comentario.innerHTML += '<hr>'
+                  
+
+                }
+
+              }
+
+            }
+
+        })
+}
+</script>
+{% endblock %}
